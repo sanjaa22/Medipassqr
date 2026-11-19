@@ -1,0 +1,6 @@
+MediPass — ажиллуулах (3 алхам)
+1) npm install
+2) docker compose up -d        (Docker байхгүй бол .env доторх DATABASE_URL-д Neon/PostgreSQL холбоосоо тавина)
+3) npm run setup               (хүснэгтүүдийг үүсгэнэ)  →  npm run dev
+Дараа нь http://localhost:3000/register
+.env файл бэлэн (түлхүүрүүд үүссэн). Үүнийг GitHub руу битгий оруул.

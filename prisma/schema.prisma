@@ -1,0 +1,83 @@
+// MediPass — өгөгдлийн сангийн схем
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(cuid())
+  email         String          @unique
+  passwordHash  String
+  name          String
+  failedLogins  Int             @default(0)
+  lockedUntil   DateTime?
+  sessionVersion Int            @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  profile       Profile?
+  card          Card?
+  events        SecurityEvent[]
+}
+
+/// Эрүүл мэндийн мэдээлэл — AES-256-GCM-ээр шифрлэгдсэн JSON хэлбэрээр хадгална
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  encData   String
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// QR карт: нийтэд нээлттэй токен, PIN, талбар тус бүрийн харагдах тохиргоо
+model Card {
+  id          String      @id @default(cuid())
+  userId      String      @unique
+  token       String      @unique
+  active      Boolean     @default(true)
+  pinHash     String?
+  visibility  Json
+  expiresAt   DateTime?
+  rotatedAt   DateTime    @default(now())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs        AccessLog[]
+}
+
+/// QR уншуулсан бүрт бичигдэх хандалтын бүртгэл
+model AccessLog {
+  id        String   @id @default(cuid())
+  cardId    String
+  event     String   // view | pin_ok | pin_fail | blocked
+  ipHash    String
+  ipMasked  String
+  userAgent String
+  createdAt DateTime @default(now())
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId, createdAt])
+}
+
+/// Бүртгэлийн аюулгүй байдлын үйл явдал (нэвтрэлт, нууц үг солих г.м.)
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  detail    String   @default("")
+  ipMasked  String   @default("")
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+/// Нэвтрэх оролдлогын хязгаарлалт (rate limit)
+model RateLimit {
+  key       String   @id
+  count     Int      @default(0)
+  resetAt   DateTime
+}

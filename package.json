@@ -1,0 +1,38 @@
+{
+  "name": "medipass",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MediPass — QR кодтой яаралтай тусламжийн карт",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "postinstall": "prisma generate",
+    "setup": "node scripts/setup.mjs"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "bcryptjs": "3.0.3",
+    "jose": "6.2.17",
+    "next": "15.5.29",
+    "qrcode": "1.5.4",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "server-only": "^0.0.1",
+    "zod": "4.3.5"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "@types/qrcode": "1.5.5",
+    "@types/react": "19.1.8",
+    "@types/react-dom": "19.1.6",
+    "autoprefixer": "10.4.20",
+    "postcss": "8.4.49",
+    "prisma": "6.19.3",
+    "tailwindcss": "3.4.19",
+    "typescript": "5.7.2"
+  }
+}

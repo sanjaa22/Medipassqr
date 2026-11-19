@@ -1,0 +1,15 @@
+# Локал PostgreSQL:  docker compose up -d
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: medipass
+      POSTGRES_PASSWORD: medipass
+      POSTGRES_DB: medipass
+    ports:
+      - "5432:5432"
+    volumes:
+      - medipass-data:/var/lib/postgresql/data
+volumes:
+  medipass-data:
