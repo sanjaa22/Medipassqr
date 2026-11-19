@@ -1,5 +1,7 @@
 import "server-only";
+import { headers } from "next/headers";
 import { prisma } from "./db";
+import { emailBaseUrl, stableBaseUrl, originFromHeaders } from "./baseurl";
 import { newCardToken } from "./crypto";
 import { defaultVisibility } from "./fields";
 
@@ -11,14 +13,19 @@ export async function ensureCard(userId: string) {
   });
 }
 
+/** Имэйлд ордог хаяг (хүсэлтийн host-д итгэхгүй) */
 export function appUrl() {
-  const fromEnv = process.env.NEXT_PUBLIC_APP_URL;
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "http://localhost:3000";
+  return emailBaseUrl(process.env);
 }
 
-export function cardUrl(token: string) {
-  return `${appUrl()}/e/${token}`;
+/** QR кодонд орох суурь хаяг: тогтмол домэйн, байхгүй бол яг одоо нээгдсэн хаяг */
+export async function baseUrl() {
+  const stable = stableBaseUrl(process.env);
+  if (stable) return stable;
+  const h = await headers();
+  return originFromHeaders(h.get("x-forwarded-host") ?? h.get("host"), h.get("x-forwarded-proto")) ?? appUrl();
+}
+
+export async function cardUrl(token: string) {
+  return `${await baseUrl()}/e/${token}`;
 }

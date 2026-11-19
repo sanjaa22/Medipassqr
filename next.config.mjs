@@ -8,6 +8,25 @@ const securityHeaders = [
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 
+// Content-Security-Policy: гадны скрипт/зураг/холболтыг хаана (XSS-ээс хамгаална).
+// Next.js өөрийн inline скриптүүдэд 'unsafe-inline' шаарддаг; 'unsafe-eval' зөвхөн хөгжүүлэлтийн горимд.
+const isProd = process.env.NODE_ENV === "production";
+securityHeaders.push({
+  key: "Content-Security-Policy",
+  value: [
+    "default-src 'self'",
+    `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    "connect-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join("; "),
+});
+
 const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,

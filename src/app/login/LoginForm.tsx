@@ -6,11 +6,12 @@ import SubmitButton from "@/components/SubmitButton";
 import FormMessage from "@/components/FormMessage";
 import { IconEye, IconEyeOff } from "@/components/Icons";
 
-export default function LoginForm({ next }: { next?: string }) {
+export default function LoginForm({ next, reset }: { next?: string; reset?: boolean }) {
   const [state, action] = useActionState(loginAction, undefined);
   const [show, setShow] = useState(false);
   return (
     <form action={action} className="space-y-5">
+      {reset && !state && <FormMessage state={{ message: "Нууц үг амжилттай солигдлоо. Шинэ нууц үгээрээ нэвтэрнэ үү." }} />}
       <FormMessage state={state} />
       <input type="hidden" name="next" value={next ?? ""} />
       <div>
@@ -25,6 +26,7 @@ export default function LoginForm({ next }: { next?: string }) {
             {show ? <IconEyeOff /> : <IconEye />}
           </button>
         </div>
+        <p className="mt-2 text-right text-sm"><Link href="/forgot" className="font-semibold text-brand-600 hover:underline">Нууц үгээ мартсан уу?</Link></p>
       </div>
       <SubmitButton className="btn-primary w-full">Нэвтрэх</SubmitButton>
       <p className="text-center text-sm text-slate-600 dark:text-slate-400">

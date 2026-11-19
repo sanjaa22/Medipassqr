@@ -14,7 +14,7 @@ export const metadata = { title: "QR код ба карт" };
 export default async function QrPage() {
   const user = await requireUser();
   const [card, med] = await Promise.all([ensureCard(user.id), getMedical(user.id)]);
-  const url = cardUrl(card.token);
+  const url = await cardUrl(card.token);
   const opts = { errorCorrectionLevel: "H" as const, margin: 2, color: { dark: "#0f172a", light: "#ffffff" } };
   const [png, svg] = await Promise.all([QRCode.toDataURL(url, { ...opts, width: 1024 }), QRCode.toString(url, { ...opts, type: "svg" })]);
   const summary = publicSummary(med, normalizeVisibility(card.visibility));

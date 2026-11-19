@@ -36,7 +36,8 @@ console.log("→ Өгөгдлийн сангийн хүснэгтүүдийг ү
 const r = spawnSync("npx", ["prisma", "db", "push", "--skip-generate"], { stdio: "inherit", shell: true });
 if (r.status !== 0) {
   console.error("\n✖ Өгөгдлийн сантай холбогдож чадсангүй. Шалгах зүйл:");
-  console.error("  1) Локал бол:  docker compose up -d  (эсвэл PostgreSQL ажиллаж байгаа эсэх)");
+  console.error("  1) Docker байгаа бол:  docker compose up -d");
+  console.error("     Docker байхгүй бол https://neon.tech дээр үнэгүй өгөгдлийн сан үүсгээд холбоосыг .env-д тавина");
   console.error("  2) .env доторх DATABASE_URL зөв эсэх (хэрэглэгч, нууц үг, хост, DB нэр)");
   process.exit(r.status ?? 1);
 }

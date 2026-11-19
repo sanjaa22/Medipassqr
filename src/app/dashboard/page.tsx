@@ -22,7 +22,7 @@ export default async function Dashboard() {
     prisma.accessLog.count({ where: { cardId: card.id, event: "pin_ok", createdAt: { gte: since } } }),
     prisma.accessLog.findMany({ where: { cardId: card.id }, orderBy: { createdAt: "desc" }, take: 5 }),
   ]);
-  const url = cardUrl(card.token);
+  const url = await cardUrl(card.token);
   const qr = await QRCode.toDataURL(url, { errorCorrectionLevel: "H", margin: 1, width: 360, color: { dark: "#0f172a", light: "#ffffff" } });
   const pct = completeness(med);
   const counts = Object.values(vis).reduce((a, v) => ({ ...a, [v]: (a[v] ?? 0) + 1 }), {} as Record<string, number>);

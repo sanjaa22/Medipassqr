@@ -10,6 +10,8 @@ export const EVENT_LABEL: Record<string, string> = {
   locked: "Бүртгэл түр түгжигдсэн",
   logout_all: "Бүх төхөөрөмжөөс гаргасан",
   password_change: "Нууц үг сольсон",
+  reset_request: "Нууц үг сэргээх хүсэлт илгээсэн",
+  password_reset: "Нууц үгээ сэргээсэн",
   profile_update: "Эрүүл мэндийн мэдээлэл шинэчилсэн",
   privacy_update: "Нууцлалын тохиргоо өөрчилсөн",
   pin_set: "PIN код тохируулсан",

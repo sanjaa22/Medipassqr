@@ -21,6 +21,7 @@ model User {
   profile       Profile?
   card          Card?
   events        SecurityEvent[]
+  resets        PasswordReset[]
 }
 
 /// Эрүүл мэндийн мэдээлэл — AES-256-GCM-ээр шифрлэгдсэн JSON хэлбэрээр хадгална
@@ -80,4 +81,19 @@ model RateLimit {
   key       String   @id
   count     Int      @default(0)
   resetAt   DateTime
+
+  @@index([resetAt])
+}
+
+/// Нууц үг сэргээх нэг удаагийн холбоос (токены зөвхөн хэшийг хадгална)
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

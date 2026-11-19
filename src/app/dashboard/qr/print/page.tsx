@@ -13,7 +13,7 @@ export const metadata = { title: "Карт хэвлэх" };
 export default async function PrintPage() {
   const user = await requireUser();
   const [card, med] = await Promise.all([ensureCard(user.id), getMedical(user.id)]);
-  const qr = await QRCode.toDataURL(cardUrl(card.token), { errorCorrectionLevel: "H", margin: 1, width: 600 });
+  const qr = await QRCode.toDataURL(await cardUrl(card.token), { errorCorrectionLevel: "H", margin: 1, width: 600 });
   const s = publicSummary(med, normalizeVisibility(card.visibility));
 
   return (

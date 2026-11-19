@@ -4,9 +4,9 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { createSession, destroySession } from "@/lib/session";
-import { rateLimit, resetRateLimit } from "@/lib/ratelimit";
+import { rateLimit } from "@/lib/ratelimit";
 import { getClientInfo } from "@/lib/request";
-import { hashIp, encrypt, newCardToken } from "@/lib/crypto";
+import { hashIp, hashKey, encrypt, newCardToken } from "@/lib/crypto";
 import { defaultVisibility } from "@/lib/fields";
 import { explainServerError } from "@/lib/dberror";
 import { logEvent } from "@/lib/events";
@@ -16,6 +16,9 @@ import { passwordSchema } from "@/lib/validation";
 
 const MAX_FAILS = 5;
 const LOCK_MIN = 15;
+// Бүх алдааны тохиолдолд ИЖИЛ мессеж (хэрэглэгч байгаа эсэх, түгжигдсэн эсэхийг ил гаргахгүй)
+const LOGIN_FAIL = "Нэвтэрч чадсангүй. Имэйл, нууц үгээ шалгана уу. Олон удаа буруу оролдсон бол 15 минутын дараа дахин оролдоно уу.";
+const DUMMY_HASH = "$2b$12$1smkmdcDQNQ0m/jnGYkfm.sG4GzZR178Pds5pZdcGcknJbPjDixxy";
 
 const registerSchema = z
   .object({
@@ -97,18 +100,20 @@ async function doLogin(fd: FormData): Promise<FormState> {
   const rl = await rateLimit(`login:${hashIp(ip)}`, 20, 900);
   if (!rl.ok) return { error: `Хэт олон оролдлого. ${Math.ceil(rl.retryAfter / 60)} минутын дараа дахин оролдоно уу.` };
 
+  // Имэйл тус бүрт: олон IP-ээс нэг хүний бүртгэл рүү дайрахаас сэргийлнэ
+  const acct = await rateLimit(`loginacct:${hashKey(email)}`, 15, 900);
+  if (!acct.ok) return { error: LOGIN_FAIL };
+
   const user = await prisma.user.findUnique({ where: { email } });
   // Хэрэглэгч байгаа эсэхийг ил гаргахгүйн тулд ижил хугацаа зарцуулна
   if (!user) {
-    await bcrypt.compare(password, "$2b$12$1smkmdcDQNQ0m/jnGYkfm.sG4GzZR178Pds5pZdcGcknJbPjDixxy");
-    return { error: "Имэйл эсвэл нууц үг буруу байна." };
-  }
-  if (user.lockedUntil && user.lockedUntil > new Date()) {
-    const min = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
-    return { error: `Олон удаа буруу оролдсон тул бүртгэл ${min} минут түгжигдсэн байна.` };
+    await bcrypt.compare(password, DUMMY_HASH);
+    return { error: LOGIN_FAIL };
   }
 
   const ok = await bcrypt.compare(password, user.passwordHash);
+  const locked = !!user.lockedUntil && user.lockedUntil > new Date();
+  if (locked) return { error: LOGIN_FAIL }; // түгжигдсэн үед зөв нууц үг ч нэвтрүүлэхгүй
   if (!ok) {
     const fails = user.failedLogins + 1;
     const lock = fails >= MAX_FAILS;
@@ -117,15 +122,11 @@ async function doLogin(fd: FormData): Promise<FormState> {
       data: { failedLogins: lock ? 0 : fails, lockedUntil: lock ? new Date(Date.now() + LOCK_MIN * 60000) : null },
     });
     await logEvent(user.id, lock ? "locked" : "login_fail");
-    return {
-      error: lock
-        ? `Олон удаа буруу оролдсон тул бүртгэл ${LOCK_MIN} минут түгжигдлээ.`
-        : `Имэйл эсвэл нууц үг буруу байна. (Үлдсэн оролдлого: ${MAX_FAILS - fails})`,
-    };
+    return { error: LOGIN_FAIL };
   }
 
   await prisma.user.update({ where: { id: user.id }, data: { failedLogins: 0, lockedUntil: null } });
-  await resetRateLimit(`login:${hashIp(ip)}`);
+  // IP-ийн хязгаарыг амжилттай нэвтрэлтээр СЭРГЭЭХГҮЙ — халдагч өөрийн бүртгэлээр нэвтэрч тоолуурыг тэглэж чадахгүй байх ёстой
   await logEvent(user.id, "login");
   await createSession(user.id, user.sessionVersion);
   return { ok: true };

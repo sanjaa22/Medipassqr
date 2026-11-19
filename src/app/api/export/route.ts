@@ -21,7 +21,7 @@ export async function GET() {
     exportedAt: new Date().toISOString(),
     account: { name: user.name, email: user.email, createdAt: user.createdAt },
     medical,
-    card: { url: cardUrl(card.token), active: card.active, hasPin: !!card.pinHash, expiresAt: card.expiresAt, visibility: normalizeVisibility(card.visibility) },
+    card: { url: await cardUrl(card.token), active: card.active, hasPin: !!card.pinHash, expiresAt: card.expiresAt, visibility: normalizeVisibility(card.visibility) },
     accessLogs: logs,
     securityEvents: events,
   };
